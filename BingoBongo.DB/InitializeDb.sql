@@ -1,4 +1,8 @@
-﻿CREATE TABLE [dbo].[User]
+﻿CREATE DATABASE BingoBongo
+
+Use BingoBongo
+
+CREATE TABLE [dbo].[User]
 (
 	[Id] INT IDENTITY(1,1) PRIMARY KEY, 
     [Name] NCHAR(50) NOT NULL,
