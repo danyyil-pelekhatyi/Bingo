@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Bingo Game</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .content {
+            min-height: 100%;
+        }
+
+        .content-inside {
+            padding-bottom: 50px;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        .card {
+            margin: 20px auto;
+            width: 500px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            font-size: 24px;
+            font-weight: bold;
+            height: 60px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #ccc;
+            color: #333;
+        }
+
+        .number {
+            background-color: #fff;
+            color: #333;
+        }
+
+        .win {
+            background-color: #ccc;
+            color: #333;
+        }
+
+        #numbers {
+            margin: 20px auto;
+            max-width: 500px;
+        }
+
+        #numbers > div {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #333;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+            padding: 10px 20
+        }
+
+        #win-screen {
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        footer {
+            height: 50px;
+            margin-top: -50px;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+</head>
+</head>
+<body>
+    <div class="content">
+        <div class="content-inside">
+            <header>
+                <h1>Bingo Game</h1>
+            </header>
+
+            <main>
+                <div id="win-screen">
+                    <img src="https://media.tenor.com/UVxR--e8Lv4AAAAC/fireworks-congratulations.gif" alt="You won!" />
+                </div>
+                <div class="card">
+                    <table>
+                        <tr>
+                            <th>B</th>
+                            <th>I</th>
+                            <th>N</th>
+                            <th>G</th>
+                            <th>O</th>
+                        </tr>
+                        <tr>
+                            <td class="number">5</td>
+                            <td class="number">17</td>
+                            <td class="number">32</td>
+                            <td class="number">46</td>
+                            <td class="number">68</td>
+                        </tr>
+                        <tr>
+                            <td class="number">9</td>
+                            <td class="number">21</td>
+                            <td class="number">3</td>
+                            <td class="number">51</td>
+                            <td class="number">75</td>
+                        </tr>
+                        <tr>
+                            <td class="number">13</td>
+                            <td class="number">28</td>
+                            <td class="number">39</td>
+                            <td class="number">55</td>
+                            <td class="number">70</td>
+                        </tr>
+                        <tr>
+                            <td class="number">1</td>
+                            <td class="number">18</td>
+                            <td class="number">34</td>
+                            <td class="number">50</td>
+                            <td class="number">66</td>
+                        </tr>
+                        <tr>
+                            <td class="number">7</td>
+                            <td class="number">23</td>
+                            <td class="number">4</td>
+                            <td class="number">59</td>
+                            <td class="number">71</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="button-container">
+                    <button id="roll-button">Roll</button>
+                    <button id="restart-button">New game</button>
+                </div>
+                <div id="numbers"></div>
+            </main>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2023 Bingo Game</p>
+        <script>
+            $(document).ready(function () {
+                var gameState = {};
+                function updateGameState(data) {
+                    gameState = data;
+                    console.log(gameState);
+                    if (gameState.didWon == true) {
+                        $("#win-screen").show().delay(5000).fadeOut();
+                    }
+                    $("td").each(function (index, element) {
+                        var number = data.table[index];
+                        $(element).text(number);
+                        if (data.numbers.length > 0 && data.numbers.find(n => n == number)) {
+                            $(element).addClass("win");
+                        } else {
+                            $(element).removeClass("win");
+                        }
+                    });
+                    if (gameState.numbers.length > 0) {
+                        var $numbers = $("#numbers");
+                        $numbers.html("");
+                        gameState.numbers.forEach(number => $numbers.append(`<div>${number}</div>`));
+                    } else {
+                        $("#numbers").html("");
+                    }
+
+                }
+
+                $.ajax("/game/gamestate", {
+                    data: { userId: 1 },
+                    success: function (data) {
+                        updateGameState(data);
+                    }
+                });
+
+                $("#roll-button").on("click", function (e) {
+                    $.ajax("/game/roll", {
+                        method: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        data: JSON.stringify("" + gameState.id),
+                        success: function (data) {
+                            updateGameState(data);
+                        }
+                    });
+                });
+
+                $("#restart-button").on("click", function (e) {
+                    $.ajax("/game/restart", {
+                        method: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        data: JSON.stringify("" + gameState.id),
+                        success: function (data) {
+                            updateGameState(data);
+                        }
+                    });
+                });
+            });
+        </script>
+    </footer>
+</body>
+</html>
